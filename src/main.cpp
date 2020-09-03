@@ -3,5 +3,6 @@
 
 int main() {
   System system;
-  NCursesDisplay::Display(system);
+  int processes = 30;
+  NCursesDisplay::Display(system, processes);
 }

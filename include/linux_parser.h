@@ -40,6 +40,26 @@ enum CPUStates {
   kGuest_,
   kGuestNice_
 };
+enum MemoryType
+{
+  kMemTotal = 0,
+  kMemFree,
+  kMemAvailable,
+  kBuffers,
+  kCached,
+};
+enum PidStat{
+  kUtime,
+  kStime,
+  kCutime,
+  kCstime,
+  kStarttime,
+};
+enum CpuTime{
+kIdleJiffies,
+kActiveJiffies,
+kTotalJiffies,
+};
 std::vector<std::string> CpuUtilization();
 long Jiffies();
 long ActiveJiffies();

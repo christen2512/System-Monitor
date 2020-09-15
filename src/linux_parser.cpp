@@ -1,4 +1,3 @@
-
 #include <dirent.h>
 #include <unistd.h>
 #include "linux_parser.h"
@@ -71,19 +70,20 @@ vector<int> LinuxParser::Pids() {
 float LinuxParser::MemoryUtilization() {
   string line, key, unit;
   double value{0.0};
-  vector<double> mem_data{0.0};
+  vector<float> mem_data{};
   std::ifstream stream(kProcDirectory + kMeminfoFilename);
-  for (int i{0}; i < 5; ++i) {
+  for (int i= 0; i < 5; ++i) {
     std::getline(stream, line);
     std::istringstream linestream(line);
     linestream >> key >> value >> unit;
     mem_data.push_back(value);
   }
-  float mem_utilization =
-      (mem_data.at(MemoryType::kMemTotal) - mem_data.at(MemoryType::kMemFree) -
-      mem_data.at(MemoryType::kBuffers) - mem_data.at(MemoryType::kCached)) / mem_data.at(MemoryType::kMemTotal);
-  
-  return mem_utilization;
+  float mem_utilization{0.0f};
+  if(mem_data.at(MemoryType::kMemTotal) > 0){
+    mem_utilization=  (mem_data.at(MemoryType::kMemTotal) - mem_data.at(MemoryType::kMemFree) -
+                       mem_data.at(MemoryType::kBuffers) -  mem_data.at(MemoryType::kCached)) / mem_data.at(MemoryType::kMemTotal); 
+  }
+return mem_utilization;
 }
 
 // TODO: Read and return the system uptime
@@ -230,7 +230,8 @@ string LinuxParser::Ram(int pid) {
     while (std::getline(stream, line)) {
       std::istringstream linestream(line);
       while (linestream >> key >> value) {
-        if (key == "VmSize:") value /= convert_to_mb;
+        if (key == "VmSize:") 
+          value /= convert_to_mb;
       }
     }
     return to_string(value);
@@ -242,13 +243,14 @@ string LinuxParser::Ram(int pid) {
 // REMOVE: [[maybe_unused]] once you define the function
 string LinuxParser::Uid(int pid) {
   string line, key;
-  double value{0.0};
+  int value{0};
   std::ifstream stream(kProcDirectory + to_string(pid) + kStatusFilename);
   if (stream.is_open()) {
     while (std::getline(stream, line)) {
       std::istringstream linestream(line);
       while (linestream >> key >> value) {
-        if (key == "Uid:") return to_string(value);
+        if (key == "Uid:") 
+         return to_string(value);
       }
     }
   }
@@ -258,22 +260,20 @@ string LinuxParser::Uid(int pid) {
 // TODO: Read and return the user associated with a process
 // REMOVE: [[maybe_unused]] once you define the function
 string LinuxParser::User(int pid) {
-  string uid = Uid(pid);
-  string line, key, value{};
+  string line, key{}, value, uid = Uid(pid), s;
   std::ifstream stream(kPasswordPath);
   if (stream.is_open()) {
     while (std::getline(stream, line)) {
       std::replace(line.begin(), line.end(), ':', ' ');
-      std::replace(line.begin(), line.end(), 'x', ' ');
       std::istringstream linestream(line);
-      while (linestream >> value >> key) {
-        if (key == uid) {
-          return value;
+      while (linestream >> key >> s >> value) {
+        if (value == uid) {
+          return key + " "; 
         }
       }
     }
   }
-  return value;
+  return key + " ";
 }
 
 // TODO: Read and return the uptime of a process
@@ -293,4 +293,4 @@ long LinuxParser::UpTime(int pid) {
     return value;
   }
   return value;
-}
+} 
